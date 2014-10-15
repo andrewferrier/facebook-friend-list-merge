@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+#
+# You can get a temporary ACCESS_TOKEN by going to
+# https://developers.facebook.com/tools/explorer. Not precisely sure which
+# permissions you'll need - I just ticked all of them. MY_USER_ID can be found
+# easily from the response to /v2.1/me in the explorer.
+#
+# This script was written in response to this StackExchange question:
+# http://webapps.stackexchange.com/a/69056/3722. It's not finished as it just
+# retrieves information at the moment.
+
+import requests
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
+
+ACCESS_TOKEN=''
+MY_USER_ID=''
+
+url = "https://graph.facebook.com/v2.1/" + MY_USER_ID + "/friendlists?access_token=" + ACCESS_TOKEN
+
+def handle_paging(url):
+    more = True
+    objectSoFar = []
+
+    while(more):
+        result = requests.get(url).json()
+        objectSoFar.extend(result['data'])
+        if (not 'paging' in result.keys()) or (not 'next' in result['paging'].keys()):
+            more = False
+        else:
+            url = result['paging']['next']
+
+    return objectSoFar
+
+lists = handle_paging(url)
+
+pp.pprint(lists)
+
+for eachList in lists:
+    url = "https://graph.facebook.com/v1.0/" + eachList['id'] + "/members?access_token=" + ACCESS_TOKEN
+    listMembers = handle_paging(url)
+    pp.pprint(listMembers)
